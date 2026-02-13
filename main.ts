@@ -49,6 +49,44 @@ try {
     console.error('Error initializing Sentry')
 }
 
+// Utility function for Windows scheduling
+async function scheduleTaskNative(task: ScheduledTask, nextRun: Date, callback: () => Promise<void>) {
+    const currentPlatform = platform()
+    
+    if (currentPlatform === 'windows') {
+        // For Windows, use setTimeout because cron does not exist
+        const delay = nextRun.getTime() - Date.now()
+        
+        if (delay > 0) {
+            console.log(`[scheduleTaskNative] Windows: scheduling task ${task.id} in ${delay}ms`)
+            
+            const timeoutId = setTimeout(async () => {
+                await callback()
+                
+                // Re-schedule the next task after this one
+                try {
+                    const cronInterval = CronExpressionParser.parse(task.cron)
+                    const nextNextRun = cronInterval.next().toDate()
+                    await scheduleTaskNative(task, nextNextRun, callback)
+                } catch (error) {
+                    console.error('[scheduleTaskNative] Error rescheduling task:', error)
+                }
+            }, delay)
+            
+            return timeoutId
+        }
+    } else {
+        // For Unix/macOS, use the cron method
+        const delay = nextRun.getTime() - Date.now()
+        if (delay > 0) {
+            const timeoutId = setTimeout(callback, delay)
+            return timeoutId
+        }
+    }
+    
+    return null
+}
+
 // forward console logs in webviews to the tauri logger, so they show up in terminal
 function forwardConsole(
     fnName: 'log' | 'debug' | 'info' | 'warn' | 'error',
