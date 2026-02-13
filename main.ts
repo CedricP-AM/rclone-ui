@@ -40,6 +40,44 @@ import type { ScheduledTask } from './types/schedules'
 let currentRcloneChild: Child | null = null
 let rcloneListenersRegistered = false
 
+// Fonction 1: Normaliser un seul chemin
+function normalizePathForRclone(path: string): string {
+    if (!path) return path
+    
+    // Si c'est un chemin Windows absolu (C:\, D:\, etc.)
+    if (/^[A-Za-z]:[\\\/]/.test(path)) {
+        if (path.startsWith(':local:')) {
+            return path
+        }
+        return `:local:${path}`
+    }
+    
+    if (path.includes(':/')) {
+        return path
+    }
+    
+    return path
+}
+
+// Fonction 2: Normaliser tous les chemins dans un objet args
+function normalizeTaskArgs(args: any): any {
+    const normalized = { ...args }
+    
+    if (normalized.source && typeof normalized.source === 'string') {
+        normalized.source = normalizePathForRclone(normalized.source)
+    }
+    
+    if (normalized.sources && Array.isArray(normalized.sources)) {
+        normalized.sources = normalized.sources.map(normalizePathForRclone)
+    }
+    
+    if (normalized.destination && typeof normalized.destination === 'string') {
+        normalized.destination = normalizePathForRclone(normalized.destination)
+    }
+    
+    return normalized
+}
+
 try {
     Sentry.init({
         ...defaultOptions,
@@ -785,28 +823,6 @@ async function handleTask(task: ScheduledTask) {
         'with args:',
         JSON.stringify(task.args, null, 2)
     )
-
-    // Normalize Windows path in task.args
-    function normalizeTaskArgs(args: any): any {
-        const normalized = { ...args }
-        
-        // Normaliser source
-        if (normalized.source && typeof normalized.source === 'string') {
-            normalized.source = normalizePathForRclone(normalized.source)
-        }
-        
-        // Normaliser sources (array)
-        if (normalized.sources && Array.isArray(normalized.sources)) {
-            normalized.sources = normalized.sources.map(normalizePathForRclone)
-        }
-        
-        // Normaliser destination
-        if (normalized.destination && typeof normalized.destination === 'string') {
-            normalized.destination = normalizePathForRclone(normalized.destination)
-        }
-        
-        return normalized
-    }
 
     const normalizedArgs = normalizeTaskArgs(task.args)
     
