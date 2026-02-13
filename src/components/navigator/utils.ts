@@ -163,6 +163,23 @@ export function parseRemotePath(fullPath: string): { remote: string | null; path
 
 export function getPathSegments(path: string): string[] {
     if (!path) return []
+    
+    // Detect Windows path (ex: C:\Users\...)
+    const windowsDriveMatch = path.match(/^([A-Za-z]:)[\\/]/)
+    
+    if (windowsDriveMatch) {
+        // Keep Windows format
+        const driveLetter = windowsDriveMatch[1]
+        const restOfPath = path.slice(driveLetter.length + 1)
+        
+        if (!restOfPath) return [driveLetter]
+        
+        // Replace backslash with forward slash for the split
+        const segments = restOfPath.replace(RE_BACKSLASH, '/').split('/').filter(Boolean)
+        return [driveLetter, ...segments]
+    }
+    
+    // For Unix path and remotes, as usual
     return path.replace(RE_BACKSLASH, '/').split('/').filter(Boolean)
 }
 
