@@ -31,37 +31,54 @@ export function getFlagCategory(
     console.log('[getFlagCategory] normalized flag', normalizedFlag)
     let foundFlag = null
 
-    foundFlag = flags.main.find((f) => f.Name === normalizedFlag)
+    // Secutity check to avoid "cannot read properties of undefined"
+    if (!flags || typeof flags !== 'object') {
+        console.error('[getFlagCategory] flags object is not properly initialized')
+        return null
+    }
 
-    if (foundFlag) {
-        if (foundFlag.Groups?.includes('Copy')) {
-            return returnFlag('copy', normalizedFlag)
+    // Check that flags.main exists and is an array
+    if (flags.main && Array.isArray(flags.main)) {
+        foundFlag = flags.main.find((f) => f.Name === normalizedFlag)
+
+        if (foundFlag) {
+            if (foundFlag.Groups?.includes('Copy')) {
+                return returnFlag('copy', normalizedFlag)
+            }
+            if (foundFlag.Groups?.includes('Sync')) {
+                return returnFlag('sync', normalizedFlag)
+            }
+            return returnFlag('config', normalizedFlag)
         }
-        if (foundFlag.Groups?.includes('Sync')) {
-            return returnFlag('sync', normalizedFlag)
+    }
+
+    if (flags.vfs && Array.isArray(flags.vfs)) {
+        foundFlag = flags.vfs.find((f) => f.Name === normalizedFlag)
+        if (foundFlag) {
+            return returnFlag('vfs', normalizedFlag)
         }
-        return returnFlag('config', normalizedFlag)
     }
 
-    foundFlag = flags.vfs.find((f) => f.Name === normalizedFlag)
-    if (foundFlag) {
-        return returnFlag('vfs', normalizedFlag)
+    if (flags.filter && Array.isArray(flags.filter)) {
+        foundFlag = flags.filter.find((f) => f.Name === normalizedFlag)
+        if (foundFlag) {
+            return returnFlag('filter', normalizedFlag)
+        }
     }
 
-    foundFlag = flags.filter.find((f) => f.Name === normalizedFlag)
-    if (foundFlag) {
-        return returnFlag('filter', normalizedFlag)
-    }
-
-    foundFlag = flags.mount.find((f) => f.Name === normalizedFlag)
-    if (foundFlag) {
-        return returnFlag('mount', normalizedFlag)
+    if (flags.mount && Array.isArray(flags.mount)) {
+        foundFlag = flags.mount.find((f) => f.Name === normalizedFlag)
+        if (foundFlag) {
+            return returnFlag('mount', normalizedFlag)
+        }
     }
 
     for (const serveType of SERVE_TYPES) {
-        foundFlag = flags[serveType].find((f) => f.Name === normalizedFlag)
-        if (foundFlag) {
-            return returnFlag(`serve.${serveType}`, normalizedFlag)
+        if (flags[serveType] && Array.isArray(flags[serveType])) {
+            foundFlag = flags[serveType].find((f) => f.Name === normalizedFlag)
+            if (foundFlag) {
+                return returnFlag(`serve.${serveType}`, normalizedFlag)
+            }
         }
     }
 
@@ -105,6 +122,32 @@ export function groupByCategory(
             ),
         },
     }
+
+    // Secuity check to avoir the crash
+    if (!allFlags || typeof allFlags !== 'object') {
+        console.error('[groupByCategory] allFlags is not properly initialized')
+        return collectedFlags
+    }
+
+    for (const [k, v] of Object.entries(flags)) {
+        const category = getFlagCategory(k, allFlags)
+        if (!category) continue
+        if (category.category.startsWith('serve.')) {
+            const serveType = category.category.slice(5) as (typeof SERVE_TYPES)[number]
+            collectedFlags.serve[serveType] = {
+                ...collectedFlags.serve[serveType],
+                [k]: v,
+            }
+            continue
+        }
+        collectedFlags[category.category as keyof Omit<typeof collectedFlags, 'serve'>] = {
+            ...collectedFlags[category.category as keyof Omit<typeof collectedFlags, 'serve'>],
+            [k]: v,
+        }
+    }
+
+    return collectedFlags
+}
 
     for (const [k, v] of Object.entries(flags)) {
         const category = getFlagCategory(k, allFlags)
