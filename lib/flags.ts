@@ -148,23 +148,3 @@ export function groupByCategory(
 
     return collectedFlags
 }
-
-    for (const [k, v] of Object.entries(flags)) {
-        const category = getFlagCategory(k, allFlags)
-        if (!category) continue
-        if (category.category.startsWith('serve.')) {
-            const serveType = category.category.slice(5) as (typeof SERVE_TYPES)[number]
-            collectedFlags.serve[serveType] = {
-                ...collectedFlags.serve[serveType],
-                [k]: v,
-            }
-            continue
-        }
-        collectedFlags[category.category as keyof Omit<typeof collectedFlags, 'serve'>] = {
-            ...collectedFlags[category.category as keyof Omit<typeof collectedFlags, 'serve'>],
-            [k]: v,
-        }
-    }
-
-    return collectedFlags
-}
