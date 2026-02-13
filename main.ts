@@ -786,11 +786,35 @@ async function handleTask(task: ScheduledTask) {
         JSON.stringify(task.args, null, 2)
     )
 
+    // Normalize Windows path in task.args
+    function normalizeTaskArgs(args: any): any {
+        const normalized = { ...args }
+        
+        // Normaliser source
+        if (normalized.source && typeof normalized.source === 'string') {
+            normalized.source = normalizePathForRclone(normalized.source)
+        }
+        
+        // Normaliser sources (array)
+        if (normalized.sources && Array.isArray(normalized.sources)) {
+            normalized.sources = normalized.sources.map(normalizePathForRclone)
+        }
+        
+        // Normaliser destination
+        if (normalized.destination && typeof normalized.destination === 'string') {
+            normalized.destination = normalizePathForRclone(normalized.destination)
+        }
+        
+        return normalized
+    }
+
+    const normalizedArgs = normalizeTaskArgs(task.args)
+    
     try {
         switch (task.operation) {
             case 'copy': {
                 console.log('[handleTask] starting copy operation')
-                const { sources, options, destination } = task.args
+                const { sources, options, destination } = normalizedArgs
                 await startCopy({
                     sources,
                     destination,
@@ -801,7 +825,7 @@ async function handleTask(task: ScheduledTask) {
             }
             case 'move': {
                 console.log('[handleTask] starting move operation')
-                const { sources, options, destination } = task.args
+                const { sources, options, destination } = normalizedArgs
                 await startMove({
                     sources,
                     destination,
@@ -812,7 +836,7 @@ async function handleTask(task: ScheduledTask) {
             }
             case 'sync': {
                 console.log('[handleTask] starting sync operation')
-                const { source, destination, options } = task.args
+                const { source, destination, options } = normalizedArgs
                 await startSync({
                     source,
                     destination,
@@ -823,7 +847,7 @@ async function handleTask(task: ScheduledTask) {
             }
             case 'bisync': {
                 console.log('[handleTask] starting bisync operation')
-                const { source, destination, options } = task.args
+                const { source, destination, options } = normalizedArgs
                 await startBisync({
                     source,
                     destination,
@@ -834,7 +858,7 @@ async function handleTask(task: ScheduledTask) {
             }
             case 'delete': {
                 console.log('[handleTask] starting delete operation')
-                const { sources, options } = task.args
+                const { sources, options } = normalizedArgs
                 await startDelete({
                     sources,
                     options,
@@ -844,7 +868,7 @@ async function handleTask(task: ScheduledTask) {
             }
             case 'purge': {
                 console.log('[handleTask] starting purge operation')
-                const { sources, options } = task.args
+                const { sources, options } = normalizedArgs
                 await startPurge({
                     sources,
                     options,
