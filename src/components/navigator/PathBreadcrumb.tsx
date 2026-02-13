@@ -45,9 +45,17 @@ export default function PathBreadcrumb({
             if (index < 0) {
                 onNavigate(remote === 'UI_LOCAL_FS' ? '/' : `${remote}:/`)
             } else {
-                const newPath = segments.slice(0, index + 1).join('/')
+                // Windows detection: if the segment contains a drive letter (ex: C:)
+                const isWindowsPath = segments.length > 0 && /^[A-Za-z]:$/.test(segments[0])
+                const newPath = segments.slice(0, index + 1).join(isWindowsPath ? '\\' : '/')
+                
                 if (remote === 'UI_LOCAL_FS') {
-                    onNavigate('/' + newPath)
+                    // On Windows, keep the format with backslash
+                    if (isWindowsPath) {
+                        onNavigate(newPath)
+                    } else {
+                        onNavigate('/' + newPath)
+                    }
                 } else {
                     onNavigate(`${remote}:/${newPath}`)
                 }
@@ -55,7 +63,7 @@ export default function PathBreadcrumb({
         },
         [segments, onNavigate, remote]
     )
-
+    
     const handleInputKeyDown = useCallback(
         (e: React.KeyboardEvent<HTMLInputElement>) => {
             if (e.key === 'Enter') {
