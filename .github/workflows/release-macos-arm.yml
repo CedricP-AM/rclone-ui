@@ -41,6 +41,7 @@ jobs:
         run: npm install
         
       - name: Import Apple Developer Certificate
+        if: false
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
