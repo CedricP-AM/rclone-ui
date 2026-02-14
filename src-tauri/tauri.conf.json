@@ -89,7 +89,7 @@
                 "depends": ["(libappindicator-gtk3 or libayatana-appindicator-gtk3)"]
             }
         },
-        "createUpdaterArtifacts": true
+        "createUpdaterArtifacts": false
     },
     "plugins": {
         "updater": {
