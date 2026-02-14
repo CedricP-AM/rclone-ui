@@ -179,9 +179,9 @@ jobs:
           #APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           
           # for updates
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          TAURI_BUNDLER_NEW_APPIMAGE_FORMAT: true
+          #TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          #TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          #TAURI_BUNDLER_NEW_APPIMAGE_FORMAT: true
         with:
           tagName: v__VERSION__
           releaseName: 'v__VERSION__'
