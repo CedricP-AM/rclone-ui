@@ -67,7 +67,7 @@
                     "width": 660
                 }
             },
-            "hardenedRuntime": true,
+            "hardenedRuntime": false,
             "minimumSystemVersion": "10.13",
             "signingIdentity": null,
             "entitlements": null
