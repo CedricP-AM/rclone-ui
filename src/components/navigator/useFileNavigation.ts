@@ -213,28 +213,39 @@ export default function useFileNavigation({
         }
     }, [cwd, selectedRemote, isRemote])
 
-    const navigateTo = useCallback(
-        (path: string) => {
-            const value = path.trim()
-            if (!value) return
-            if (value.includes(':/')) {
-                const [remote, ...rest] = value.split(':/')
-                const rel = rest.join('/')
-                cleanupSelectionForRemote(remote)
-                startTransition(() => {
-                    setSelectedRemote(remote)
-                    setCwd(rel)
-                })
-            } else {
-                cleanupSelectionForRemote('UI_LOCAL_FS')
-                startTransition(() => {
-                    setSelectedRemote('UI_LOCAL_FS')
-                    setCwd(value)
-                })
-            }
-        },
-        [cleanupSelectionForRemote]
-    )
+const navigateTo = useCallback(
+    (path: string) => {
+        const value = path.trim()
+        if (!value) return
+        
+        // Detect Windows path with UI_LOCAL_FS: (ex: UI_LOCAL_FS:C:\Users)
+        if (value.startsWith('UI_LOCAL_FS:') && /^UI_LOCAL_FS:[A-Za-z]:[\\\/]/.test(value)) {
+            const rel = value.slice('UI_LOCAL_FS:'.length)  // Enlève "UI_LOCAL_FS:"
+            cleanupSelectionForRemote('UI_LOCAL_FS')
+            startTransition(() => {
+                setSelectedRemote('UI_LOCAL_FS')
+                setCwd(rel)
+            })
+        } else if (value.includes(':/')) {
+            // Remote paths (remote:/path)
+            const [remote, ...rest] = value.split(':/')
+            const rel = rest.join('/')
+            cleanupSelectionForRemote(remote)
+            startTransition(() => {
+                setSelectedRemote(remote)
+                setCwd(rel)
+            })
+        } else {
+            // Local path without préfix
+            cleanupSelectionForRemote('UI_LOCAL_FS')
+            startTransition(() => {
+                setSelectedRemote('UI_LOCAL_FS')
+                setCwd(value)
+            })
+        }
+    },
+    [cleanupSelectionForRemote]
+)
 
     const selectRemote = useCallback(
         async (remote: string | 'UI_LOCAL_FS' | 'UI_FAVORITES') => {
