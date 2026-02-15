@@ -70,6 +70,13 @@ export function cacheKey(remote: string | 'UI_LOCAL_FS' | null, dir: string) {
 
 export function normalizeRemoteDir(path: string) {
     if (!path) return ''
+    
+    // Don't normalize Windows paths (keep backslashes)
+    if (/^[A-Za-z]:[\\\/]/.test(path)) {
+        // Just remove trailing slash if needed
+        return path.replace(/[\\\/]$/, '')
+    }
+    
     const cleaned = path.replace(RE_BACKSLASH, '/').replace(RE_TRAILING_SLASH, '')
     return cleaned
 }
