@@ -86,7 +86,10 @@ export async function listRemotePath(
     dir: string,
     options: { noModTime?: boolean; noMimeType?: boolean }
 ) {
-    const base = normalizeRemoteDir(dir)
+    // For UI_LOCAL_FS, don't normalize Windows paths
+    const base = (remote === 'UI_LOCAL_FS' && /^[A-Za-z]:[\\\/]/.test(dir)) 
+        ? dir.replace(/[\\\/]$/, '')  // Juste enlever le trailing slash
+        : normalizeRemoteDir(dir)
     const slashed = base ? `${base}/` : ''
     log('listRemotePath', { remote, dir, base, slashed, options })
 
