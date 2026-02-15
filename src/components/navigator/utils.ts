@@ -57,6 +57,10 @@ export function getRemoteParent(path: string) {
 }
 
 export function serializeRemotePath(remote: string, relPath: string) {
+    // For Windows path (C:\, D:\, etc.), donc add / préfix
+    if (remote === 'UI_LOCAL_FS' && /^[A-Za-z]:[\\\/]/.test(relPath)) {
+        return `${remote}:${relPath}`
+    }
     return `${remote}:/${relPath}`
 }
 
